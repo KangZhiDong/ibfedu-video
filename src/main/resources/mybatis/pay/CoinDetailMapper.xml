@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ibf.live.dao.pay.CoinDetailDao">
+	<resultMap id="CoinDetailResult" type="CoinDetail">
+		<result property="id" column="ID" />
+		<result property="type" column="TYPE" />
+		<result property="action" column="ACTION"/>
+		<result property="uid" column="UID"/>
+		<result property="touid" column="TOUID"/>
+		<result property="giftid" column="GIFTID"/>
+		<result property="giftcount" column="GIFTCOUNT"/>
+		<result property="content" column="CONTENT"/>
+		<result property="objectIcon" column="OBJECTICON"/>
+		<result property="coin" column="COIN"/>
+		<result property="showId" column="SHOWID"/>
+		<result property="addtime" column="ADDTIME"/>
+		<result property="giftName" column="GIFTNAME"/>
+	</resultMap>
+	
+	<sql id="coin_detail_columns">
+	ss_coindetail.ID,
+	ss_coindetail.TYPE,
+	ss_coindetail.ACTION,
+	ss_coindetail.UID,
+	ss_coindetail.TOUID,
+	ss_coindetail.GIFTID,
+	ss_coindetail.GIFTCOUNT,
+	ss_coindetail.CONTENT,
+	ss_coindetail.OBJECTICON,
+	ss_coindetail.COIN,
+	ss_coindetail.SHOWID,
+	ss_coindetail.ADDTIME
+	</sql>
+	
+
+	<!-- 分页查询消费，开始 -->
+	<select id="queryCoinListPage" parameterType="java.util.Map" resultMap="CoinDetailResult">
+	SELECT <include refid="coin_detail_columns"/>,ss_gift.GIFTNAME
+	FROM ss_coindetail  LEFT JOIN ss_gift ON ss_coindetail.GIFTID = ss_gift.ID
+	<where>
+		<if test="  uid!=null and   uid!=''">
+			ss_coindetail.UID=#{  uid}
+		</if>
+		<if test="  type!=null and   type!=''">
+			AND ss_coindetail.TYPE=#{  type}
+		</if>
+		<if test="  action!=null and   action!=''">
+			AND ss_coindetail.ACTION=#{  action}
+		</if>
+		<if test="  touid!=null and   touid!=''">
+			AND ss_coindetail.TOUID=#{  touid}
+		</if>
+		<if test="  giftid>0">
+			AND ss_coindetail.GIFTID=#{  giftid}
+		</if>
+		<if test="  showId>0">
+			AND ss_coindetail.SHOWID=#{  showId}
+		</if>
+		<if test="  startDate!=null and startDate!=''">
+			AND ss_coindetail.ADDTIME >= UNIX_TIMESTAMP(#{  startDate})
+		</if>
+		<if test="  endDate!=null and   endDate!=''">
+			AND <![CDATA[ss_coindetail.ADDTIME < UNIX_TIMESTAMP(#{  endDate})]]>
+		</if>
+	</where>
+	 <if test="  sort=='addtime'">
+		ORDER BY ss_coindetail.ADDTIME
+	</if>
+	<if test="  sort=='type'">
+		ORDER BY ss_coindetail.TYPE
+	</if>
+	<if test="  sort=='giftid'">
+		ORDER BY ss_coindetail.GIFTID
+	</if>
+	<if test="  sort=='giftcount'">
+		ORDER BY ss_coindetail.GIFTCOUNT
+	</if>
+	<if test="  sort=='coin'">
+		ORDER BY ss_coindetail.COIN
+	</if>
+	<if test="  isDesc>0">
+		DESC
+	</if>
+	<include refid="publicMapper.pageEnd"/>
+	</select>
+	<select id="queryCoinListPageCount" parameterType="java.util.Map" resultType="int">
+	SELECT COUNT(1) FROM ss_coindetail 
+	<where>
+		<if test="  uid!=null and   uid!=''">
+			ss_coindetail.UID=#{  uid}
+		</if>
+		<if test="  type!=null and   type!=''">
+			AND ss_coindetail.TYPE=#{  type}
+		</if>
+		<if test="  action!=null and   action!=''">
+			AND ss_coindetail.ACTION=#{  action}
+		</if>
+		<if test="  touid!=null and   touid!=''">
+			AND ss_coindetail.TOUID=#{  touid}
+		</if>
+		<if test="  giftid>0">
+			AND ss_coindetail.GIFTID=#{  giftid}
+		</if>
+		<if test="  showId>0">
+			AND ss_coindetail.SHOWID=#{  showId}
+		</if>
+		<if test="  startDate!=null and startDate!=''">
+			AND ss_coindetail.ADDTIME >= UNIX_TIMESTAMP(#{  startDate})
+		</if>
+		<if test="  endDate!=null and   endDate!=''">
+			AND <![CDATA[ss_coindetail.ADDTIME < UNIX_TIMESTAMP(#{  endDate})]]>
+		</if>
+	</where>
+	</select>
+	<!-- 分页查询消费，结束-->
+</mapper>

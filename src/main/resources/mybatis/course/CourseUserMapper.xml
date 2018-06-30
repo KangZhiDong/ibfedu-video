@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ibf.live.dao.course.CourseUserDao">
+
+	<resultMap id="CourseUserResult" type="CourseUser">
+	<result property="courseId" column="COURSE_ID" />
+	<result property="userId" column="USER_ID" />
+	</resultMap>
+
+	<sql id="edu_course_user_columns">
+	EDU_COURSE_USER.COURSE_ID,
+	EDU_COURSE_USER.USER_ID
+	</sql>
+
+	<!-- 添加课程与讲师的关联数 -->
+	<insert id="createCourseUser" parameterType="java.lang.String">
+	INSERT INTO EDU_COURSE_USER(<include refid="edu_course_user_columns"/>) VALUES ${value}
+	</insert>
+	<!-- 删除课程与讲师的关联数据 -->
+	<delete id="deleteCourseUser" parameterType="int">
+	DELETE FROM EDU_COURSE_USER WHERE COURSE_ID=#{value}
+	</delete>
+</mapper>

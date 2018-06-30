@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ibf.live.dao.gift.GiftSortDao">
+		<resultMap id="GiftSortResult" type="GiftSort">
+            <result property="id" column="id"/>
+            <result property="sortName" column="sortname"/>
+            <result property="orderNo" column="orderno"/>
+            <result property="addTime" column="addtime"/>
+            <result property="delFlag" column="delflag"/>
+        </resultMap>
+
+	<sql id="columns">
+		a.id,
+		a.sortname ,
+		a.orderno ,
+		a.addtime ,
+		a.delflag
+	</sql>
+	
+	<sql id="table">
+		ss_giftsort
+	</sql>
+	
+	<sql id="publicWhere">
+	    <if test="  sortName!=null and   sortName!=''">
+			and a.sortname like concat('%',#{  sortName},'%')
+		</if>
+	</sql>
+	
+	<!-- 添加礼物分类 -->
+	<insert id="createGiftSort">
+		INSERT INTO
+		<include refid="table" />
+				(
+				id,
+				sortname,
+				orderno,
+				addtime,
+				delflag
+				)
+				VALUES (
+				#{id},
+				#{sortName},
+				#{orderNo},
+				#{addTime},
+				#{delFlag}
+				)
+	</insert>
+	
+	<!-- 分页查询 -->
+	<select id="queryGiftSortList" parameterType="java.util.HashMap" resultMap="GiftSortResult">
+	  SELECT 
+		<include refid="columns"/>
+	  FROM 
+	    <include refid="table"/> as a
+	  where a.delflag=0
+	    <include refid="publicWhere"/>  
+	ORDER BY  a.orderno asc
+	<include refid="publicMapper.pageEnd" />
+	</select>
+	
+	<!-- 列表查询 -->
+	<select id="list" parameterType="java.util.HashMap" resultMap="GiftSortResult">
+	  SELECT 
+		<include refid="columns"/>
+	  FROM 
+	    <include refid="table"/> as a
+	  where a.delflag=0
+	</select>
+	<!-- 获取总数 -->
+	<select id="queryGiftSortListCount" parameterType="java.util.HashMap" resultType="int">
+	SELECT COUNT(1) FROM <include refid="table"/> where delflag=0
+	</select>
+	
+	 <!-- 根据ID查询 -->
+	 <select id="queryGiftSortById" parameterType="int" resultMap="GiftSortResult">
+	   SELECT 
+	     <include refid="columns"/> 
+	   FROM 
+	   <include refid="table"/>  AS a
+	   WHERE  a.delflag=0 and a.id=#{value}
+	</select>  
+	
+	
+	<!-- 修改 -->
+    <update id="updateGiftSort" parameterType="GiftSort">
+    	UPDATE 
+        <include refid="table"/>
+        SET 
+         sortname=#{sortName},
+         orderno=#{orderNo}
+        WHERE id=#{id}
+    </update>
+    
+    <!-- 删除 -->
+	<update id="delete" parameterType="int">
+		update
+		<include refid="table" />
+		set 
+		   delflag = 1
+		where id = #{id}
+	</update>
+    
+</mapper>

@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ibf.live.dao.gift.GiftDao">
+     <resultMap id="GiftResult" type="Gift">
+	            <id property="id" column="id"/>
+	            <result property="giftName" column="giftname"/>
+	            <result property="needCoin" column="needcoin"/>
+	            <result property="giftStyle" column="giftStyle"/>
+	            <result property="giftType" column="giftType"/>
+	            <result property="giftIcon_25" column="giftIcon_25"/>
+	            <result property="giftIcon" column="giftIcon"/>
+	            <result property="giftSwf" column="giftSwf"/>
+	            <result property="giftComment" column="giftComment"/>
+	            <result property="addTime" column="addtime"/>
+	            <result property="delFlag" column="delflag"/>
+            <association property="giftSort" column="sid" javaType="GiftSort">
+				<!-- id:关联的用户信息的唯一约束 -->
+				<!-- property :id指定的列映射到关联com.ibf.live.edu.entity.gift.GiftSort类的那个属性中 -->
+				<id   property="id" column="sid" />
+				<result property="sortName"  column="sortname" />
+				<result  property="orderNo"  column="orderno"/>
+				<result  property="addTime"  column="addtime"/>
+		   </association>
+     </resultMap>
+  
+	<sql id="columns">
+		a.id,
+		a.giftname,
+		a.needcoin,
+		a.giftStyle,
+		a.giftType,
+		a.giftIcon_25,
+		a.giftIcon,
+		a.giftSwf,
+		a.addtime,
+		a.giftComment ,
+		a.delflag
+	</sql>
+	
+	<sql id="allcolumns">
+	    <include refid="columns"/>,
+	    a.sid ,
+	    b.sortname,
+	    b.orderno,
+	    b.addtime
+	</sql>
+	
+	<sql id="table">
+		ss_gift
+	</sql>
+	
+	<sql id="tables">
+		left join ss_giftsort b on b.id=a.sid
+	</sql>
+	
+	<sql id="publicWhere">
+	    <if test="  giftName!=null and   giftName!=''">
+			and a.giftname like concat('%',#{  giftName},'%')
+		</if>
+	</sql>
+	
+	<!-- 分页查询 -->
+	<select id="queryGiftList" parameterType="java.util.HashMap" resultMap="GiftResult">
+	  SELECT 
+		<include refid="allcolumns"/>
+	  FROM 
+	    <include refid="table"/> as a
+	    <include refid="tables"/>
+	  where a.delflag=0
+	    <include refid="publicWhere"/>
+	  ORDER BY  a.addtime desc
+	    <include refid="publicMapper.pageEnd" />
+	</select>
+	
+	<!-- 获取总数 -->
+	<select id="queryGiftListCount" parameterType="java.util.HashMap" resultType="int">
+	SELECT COUNT(1) FROM <include refid="table"/> where delflag=0
+	</select>
+	
+	<!-- 根据ID查询 -->
+	 <select id="queryGiftById" parameterType="int" resultMap="GiftResult">
+	   SELECT 
+	     <include refid="allcolumns"/> 
+	   FROM 
+	   <include refid="table"/>  AS a
+	   <include refid="tables"/>
+	   WHERE  a.delflag=0 and a.id=#{value}
+	</select>  
+	
+	<!-- 根据礼物分类ID查询 -->
+	<select id="queryGiftBySortId" parameterType="int" resultMap="GiftResult">
+	   SELECT 
+	     <include refid="columns"/> 
+	   FROM 
+	   <include refid="table"/>  AS a
+	   WHERE  a.delflag=0 and a.sid=#{value}
+	</select> 
+	<!-- 添加 -->
+	<insert id="insert" parameterType="Gift">
+		INSERT INTO
+		<include refid="table" />
+				(
+				id,
+				sid,
+				giftname,
+				needcoin,
+				giftIcon_25,
+				giftIcon,
+				giftSwf,
+				giftComment,
+				addtime,
+				delflag
+				)
+				VALUES (
+				#{id},
+				#{giftSort.id},
+				#{giftName},
+				#{needCoin},
+				#{giftIcon_25},
+				#{giftIcon},
+				#{giftSwf},
+				#{giftComment},
+				#{addTime},
+				#{delFlag}
+				)
+	</insert>
+	
+   <!-- 修改 -->
+    <update id="update" parameterType="Gift">
+    	UPDATE 
+        <include refid="table"/>
+        SET 
+	        sid=#{giftSort.id},
+			giftname=#{giftName},
+			needcoin=#{needCoin},
+			giftIcon_25=#{giftIcon_25},
+			giftIcon=#{giftIcon},
+			giftSwf=#{giftSwf},
+			giftComment=#{giftComment}
+        WHERE id=#{id}
+    </update>
+	
+	<!-- 删除 -->
+	<update id="delete" parameterType="int">
+		update
+		<include refid="table" />
+		set 
+		   delflag = 1
+		where id = #{id}
+	</update>
+</mapper>

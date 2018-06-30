@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ibf.live.dao.message.MessageLogDao">
+
+	<resultMap id="MessageLogResult" type="MessageLog">
+		<result property="id" column="id" />
+		<result property="uid" column="uid" />
+		<result property="showName" column="SHOW_NAME" />
+		<result property="mobile" column="MOBILE" />
+		<result property="email" column="EMAIL" />
+		<result property="sex" column="SEX" />
+		<result property="userName" column="USER_NAME" />
+		<result property="msg" column="msg" />
+		<result property="roomid" column="roomid" />
+		<result property="roomTitle" column="title " />
+		<result property="createTime" column="createTime" />
+		<result property="joinTime" column="joinTime" />
+		<result property="leftTime" column="leftTime" />
+		<result property="type" column="type" />
+		<result property="totalNum" column="totalNum" />
+		<result property="qq" column="QQ" />
+	</resultMap>
+	
+	
+    <!-- 查询列表 -->
+	<select id="getList" resultMap="MessageLogResult" parameterType="java.util.HashMap">
+        SELECT 
+			ss_msg_log.createTime ,
+			ss_msg_log.roomid,
+			ss_msg_log.uid,
+			b.title ,
+			b.totalNum,
+			EDU_USER.SHOW_NAME,
+			EDU_USER.MOBILE,
+			EDU_USER.EMAIL,
+			EDU_USER.SEX,
+			EDU_USER.USER_NAME,
+			EDU_USER.QQ
+		FROM ss_msg_log  
+		LEFT JOIN (
+				SELECT  a_.roomid,b_.title,COUNT(DISTINCT uid) AS 'totalNum'
+				  FROM ss_msg_log a_
+				LEFT JOIN EDU_LIVE_ROOM b_ ON a_.roomid = b_.roomname
+				  GROUP BY roomid
+			) AS b ON ss_msg_log.roomid=b.roomid
+        LEFT JOIN EDU_USER ON ss_msg_log.uid=EDU_USER.USER_ID
+        <where>
+			<if test="  keyUser!=null and   keyUser!=''">
+				AND (EDU_USER.MOBILE LIKE CONCAT('%',#{  keyUser},'%') OR
+					 EDU_USER.EMAIL LIKE CONCAT('%',#{  keyUser},'%') OR
+					 EDU_USER.USER_NAME LIKE CONCAT('%',#{  keyUser},'%') OR
+					 EDU_USER.SHOW_NAME LIKE CONCAT('%',#{  keyUser},'%'))
+		    </if>
+			<if test="  roomid!=null and   roomid!=0">
+				and ss_msg_log.roomid=#{  roomid}
+			</if>
+			<if test="  createTime !=null and   createTime!=''">
+				AND DATE_FORMAT(ss_msg_log.createTime,'%Y-%m-%d')=DATE_FORMAT(#{  createTime},'%Y-%m-%d')
+			</if>
+        </where>
+        GROUP BY ss_msg_log.roomid,ss_msg_log.uid
+        ORDER BY ss_msg_log.roomid,ss_msg_log.createTime DESC	
+		<include refid="publicMapper.pageEnd" />
+	</select>
+
+	<select id="getListCount" resultType="int" parameterType="java.util.HashMap">
+	SELECT COUNT(1)
+      FROM (
+		SELECT 
+			ss_msg_log.createTime ,
+			ss_msg_log.roomid,
+			ss_msg_log.uid,
+			b.title ,
+			b.totalNum,
+			EDU_USER.SHOW_NAME,
+			EDU_USER.MOBILE,
+			EDU_USER.EMAIL,
+			EDU_USER.SEX
+		FROM ss_msg_log  
+		LEFT JOIN (
+				SELECT  a_.roomid,b_.title,COUNT(DISTINCT uid) AS 'totalNum'
+				  FROM ss_msg_log a_
+				LEFT JOIN EDU_LIVE_ROOM b_ ON a_.roomid = b_.roomname
+				  GROUP BY roomid
+			) AS b ON ss_msg_log.roomid=b.roomid
+        LEFT JOIN EDU_USER ON ss_msg_log.uid=EDU_USER.USER_ID
+		<where>
+			<if test="  keyUser!=null and   keyUser!=''">
+				AND (EDU_USER.MOBILE LIKE CONCAT('%',#{  keyUser},'%') OR
+					 EDU_USER.EMAIL LIKE CONCAT('%',#{  keyUser},'%') OR
+					 EDU_USER.USER_NAME LIKE CONCAT('%',#{  keyUser},'%') OR
+					 EDU_USER.SHOW_NAME LIKE CONCAT('%',#{  keyUser},'%'))
+		    </if>
+			<if test="  roomid!=null and   roomid!=0">
+				and ss_msg_log.roomid=#{  roomid}
+			</if>
+			<if test="  createTime !=null and   createTime!=''">
+				AND DATE_FORMAT(ss_msg_log.createTime,'%Y-%m-%d')=DATE_FORMAT(#{  createTime},'%Y-%m-%d')
+			</if>
+        </where>
+        GROUP BY ss_msg_log.roomid,ss_msg_log.uid
+        ) AS a
+    </select>
+    
+    <!-- 某天某直播间某用户参课动态 -->
+    <select id="getInfoList" resultMap="MessageLogResult" parameterType="java.util.HashMap">
+         SELECT 
+            ss_msg_log.createTime ,
+			ss_msg_log.roomid,
+			ss_msg_log.uid,
+			ss_msg_log.msg,
+			EDU_USER.SHOW_NAME,
+			EDU_USER.MOBILE,
+			EDU_USER.EMAIL,
+			EDU_USER.SEX,
+			EDU_USER.QQ
+		 FROM 
+		   ss_msg_log 
+		 LEFT JOIN EDU_USER ON EDU_USER.USER_ID=ss_msg_log.uid
+		 <where>
+			<if test="  uid!=null and   uid!=''">
+				AND ss_msg_log.uid = #{  uid}
+		    </if>
+			<if test="  roomid!=null and   roomid!=0">
+				AND ss_msg_log.roomid=#{  roomid}
+			</if>
+			<if test="  createTime !=null and   createTime!=''">
+				AND DATE_FORMAT(ss_msg_log.createTime,'%Y-%m-%d')=DATE_FORMAT(#{  createTime},'%Y-%m-%d')
+			</if>
+        </where>
+		 ORDER BY ss_msg_log.createTime ASC
+    </select>
+    
+    <select id="getInfoListCount" resultType="int" parameterType="java.util.HashMap">
+         SELECT 
+            COUNT(1)
+		 FROM 
+		   ss_msg_log 
+		 LEFT JOIN EDU_USER ON EDU_USER.USER_ID=ss_msg_log.uid
+		<where>
+			<if test="  uid!=null and   uid!=''">
+				AND ss_msg_log.uid = #{  uid}
+		    </if>
+			<if test="  roomid!=null and   roomid!=0">
+				AND ss_msg_log.roomid=#{  roomid}
+			</if>
+			<if test="  createTime !=null and   createTime!=''">
+				AND DATE_FORMAT(ss_msg_log.createTime,'%Y-%m-%d')=DATE_FORMAT(#{  createTime},'%Y-%m-%d')
+			</if>
+        </where>
+    </select>
+    
+    <select id="getChatPeopleList" resultMap="MessageLogResult" parameterType="java.util.HashMap">
+	      SELECT
+			 t.roomid  ,
+			 t2.user_name  AS 'USER_NAME',
+			 t2.show_name  AS 'SHOW_NAME',
+			 t2.mobile  AS 'MOBILE',
+			 t2.QQ  ,
+			 t2.email AS 'EMAIL',
+			 t2.sex AS 'SEX',
+			 t.joinTime ,
+			 t.leftTime
+	      FROM
+		   (
+			SELECT a.*,b.leftTime FROM (
+			   SELECT uid, roomid,MIN(createTime) AS joinTime  FROM	  ss_msg_log
+			     WHERE roomid = #{  roomid}
+				 AND TYPE = 1
+				 AND DATE_FORMAT(createTime, '%Y-%m-%d') = DATE_FORMAT(#{  createTime},'%Y-%m-%d')
+			   GROUP BY uid) a
+			 LEFT JOIN (
+					SELECT uid,roomid,MAX(createTime) AS leftTime FROM ss_msg_log
+					WHERE roomid = #{  roomid}
+					AND TYPE = 2
+					AND DATE_FORMAT(createTime, '%Y-%m-%d') = DATE_FORMAT(#{  createTime},'%Y-%m-%d')
+					GROUP BY uid
+				  ) b ON a.uid=b.uid ) t
+		    LEFT JOIN EDU_USER t2 ON t.uid = t2.USER_ID
+			WHERE  t2.TYPE=1
+			     AND (
+					t2.mobile != ''
+					OR t2.QQ != ''
+					OR t2.email != ''
+				 )
+		     <if test="  keyUser!=null and   keyUser!=''">
+					AND (t2.MOBILE LIKE CONCAT('%',#{  keyUser},'%') OR
+						 t2.EMAIL LIKE CONCAT('%',#{  keyUser},'%') OR
+						 t2.USER_NAME LIKE CONCAT('%',#{  keyUser},'%') OR
+						 t2.SHOW_NAME LIKE CONCAT('%',#{  keyUser},'%'))
+	         </if>
+			ORDER BY t.joinTime
+	       <include refid="publicMapper.pageEnd" />
+    </select>
+    
+    <select id="getChatPeopleListCount" resultType="int" parameterType="java.util.HashMap">
+	    SELECT COUNT(1)
+          FROM
+		   (
+			SELECT a.*,b.leftTime FROM (
+			   SELECT uid, roomid,MIN(createTime) AS joinTime  FROM	  ss_msg_log
+			     WHERE roomid = #{  roomid}
+				 AND TYPE = 1
+				 AND DATE_FORMAT(createTime, '%Y-%m-%d') = DATE_FORMAT(#{  createTime},'%Y-%m-%d')
+			   GROUP BY uid) a
+			 LEFT JOIN (
+					SELECT uid,roomid,MAX(createTime) AS leftTime FROM ss_msg_log
+					WHERE roomid = #{  roomid}
+					AND TYPE = 2
+					AND DATE_FORMAT(createTime, '%Y-%m-%d') = DATE_FORMAT(#{  createTime},'%Y-%m-%d')
+					GROUP BY uid
+				  ) b ON a.uid=b.uid ) t
+		    LEFT JOIN EDU_USER t2 ON t.uid = t2.USER_ID
+			WHERE t2.TYPE=1
+			    AND (
+					t2.mobile != ''
+					OR t2.QQ != ''
+					OR t2.email != ''
+				 )
+			     <if test="  keyUser!=null and   keyUser!=''">
+					AND (t2.MOBILE LIKE CONCAT('%',#{  keyUser},'%') OR
+						 t2.EMAIL LIKE CONCAT('%',#{  keyUser},'%') OR
+						 t2.USER_NAME LIKE CONCAT('%',#{  keyUser},'%') OR
+						 t2.SHOW_NAME LIKE CONCAT('%',#{  keyUser},'%'))
+		         </if>
+			ORDER BY t.joinTime
+      </select>
+      
+      
+    <select id="getChatSomedayList" resultMap="MessageLogResult" parameterType="java.util.HashMap">
+         SELECT
+			t.createTime ,
+			t.roomid,
+			t2.user_name AS 'USER_NAME',
+			t2.show_name AS 'SHOW_NAME',
+			t2.mobile AS 'MOBILE',
+		    t2.QQ,
+			t2.email AS 'EMAIL',
+			t2.sex AS 'SEX',
+			t.msg
+		FROM
+			(
+				SELECT
+					createTime,
+					roomid,
+					msg,
+					uid
+				FROM
+					ss_msg_log
+				WHERE roomid = #{  roomid}
+				  AND TYPE =0 
+				  AND DATE_FORMAT(createTime,'%Y-%m-%d')=DATE_FORMAT(#{  createTime},'%Y-%m-%d')
+			) t
+		LEFT JOIN EDU_USER t2 ON t.uid = t2.USER_ID 
+		WHERE t2.TYPE=1 AND (t2.mobile!='' OR t2.QQ !='' OR t2.email!='')
+        <if test="  keyUser!=null and   keyUser!=''">
+		  AND (t2.MOBILE LIKE CONCAT('%',#{  keyUser},'%') OR
+				 t2.EMAIL LIKE CONCAT('%',#{  keyUser},'%') OR
+				 t2.USER_NAME LIKE CONCAT('%',#{  keyUser},'%') OR
+				 t2.SHOW_NAME LIKE CONCAT('%',#{  keyUser},'%'))
+         </if>
+		ORDER BY t.uid
+	 <include refid="publicMapper.pageEnd" />
+    </select>
+    
+    <select id="getChatSomedayListCount" resultType="int" parameterType="java.util.HashMap">
+      SELECT
+			count(1)
+		FROM
+			(
+				SELECT
+					createTime,
+					roomid,
+					msg,
+					uid
+				FROM
+					ss_msg_log
+				WHERE roomid = #{  roomid}
+				  AND TYPE =0 
+				  AND DATE_FORMAT(createTime,'%Y-%m-%d')=DATE_FORMAT(#{  createTime},'%Y-%m-%d')
+			) t
+		LEFT JOIN EDU_USER t2 ON t.uid = t2.USER_ID 
+		WHERE t2.TYPE=1 AND (t2.mobile!='' OR t2.QQ !='' OR t2.email!='')
+		  <if test="  keyUser!=null and   keyUser!=''">
+		  AND (t2.MOBILE LIKE CONCAT('%',#{  keyUser},'%') OR
+			 t2.EMAIL LIKE CONCAT('%',#{  keyUser},'%') OR
+			 t2.USER_NAME LIKE CONCAT('%',#{  keyUser},'%') OR
+			 t2.SHOW_NAME LIKE CONCAT('%',#{  keyUser},'%'))
+	      </if>
+		ORDER BY t.uid
+     </select>
+</mapper>

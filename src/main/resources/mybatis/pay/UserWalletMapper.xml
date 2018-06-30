@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ibf.live.dao.pay.UserWalletDao">
+	<resultMap id="UserWalletResult" type="UserWallet">
+		<result property="uid" column="UID" />
+		<result property="amt" column="AMT" />
+		<result property="createdDate" column="CREATED_DATE"/>
+		<result property="updatedDate" column="UPDATED_DATE"/>
+	</resultMap>
+	
+	<sql id="user_wallet_columns">
+	user_wallet.UID,
+	user_wallet.AMT,
+	user_wallet.CREATED_DATE,
+	user_wallet.UPDATED_DATE
+	</sql>
+	
+	<sql id="user_wallet_properties">
+	#{uid},
+	#{amt},
+	#{createdDate},
+	#{updatedDate}
+	</sql>
+	
+	<!-- 添加用户钱包 -->
+	<insert id="createUserWallet" parameterType="UserWallet">
+	INSERT INTO user_wallet(<include refid="user_wallet_columns"/>) 
+	VALUE (<include refid="user_wallet_properties"/>)
+	</insert>
+
+	<!-- 通过uid，查询用户钱包 -->
+	<select id="queryUserWallet" parameterType="String" resultMap="UserWalletResult">
+	SELECT <include refid="user_wallet_columns"/> FROM user_wallet WHERE user_wallet.UID=#{value}
+	</select>
+</mapper>

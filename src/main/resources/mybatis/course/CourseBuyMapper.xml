@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ibf.live.dao.course.CourseBuyDao">
+	<resultMap id="CourseBuyResult" type="CourseBuy">
+	            <id property="courseBuyId" column="COURSE_BUY_ID"/>
+	            <result property="addTime" column="ADD_TIME"/>
+            <association property="course" column="COURSE_ID" javaType="course">
+				<!-- id:关联的用户信息的唯一约束 -->
+				<!-- property :id指定的列映射到关联com.ibf.live.edu.entity.gift.GiftSort类的那个属性中 -->
+				<id   property="courseId" column="COURSE_ID" />
+				<result property="courseName"  column="COURSE_NAME" />
+				<result property="logo"  column="LOGO" />
+		    </association>
+		   <association property="user" column="USER_ID" javaType="user">
+				<!-- id:关联的用户信息的唯一约束 -->
+				<!-- property :id指定的列映射到关联com.ibf.live.edu.entity.gift.GiftSort类的那个属性中 -->
+				<id   property="userId" column="USER_ID" />
+				<result property="userName"  column="USER_NAME" />
+				<result property="showName"  column="SHOW_NAME" />
+				<result property="email"  column="EMAIL" />
+				<result property="mobile"  column="MOBILE" />
+		   </association>
+     </resultMap>
+	
+	<sql id="columns">
+		a.COURSE_BUY_ID,
+		a.COURSE_ID ,
+		a.USER_ID,
+		a.ADD_TIME
+	</sql>
+	
+	<sql id="allcolumns">
+	    <include refid="columns"/>,
+	    c.COURSE_NAME,
+	    c.LOGO,
+	    b.MOBILE,
+	    b.EMAIL,
+	    b.SHOW_NAME,
+	    b.USER_NAME
+	</sql>
+	
+	<sql id="table">
+		EDU_COURSE_BUY
+	</sql>
+	
+	<sql id="tables">
+		LEFT JOIN EDU_COURSE AS c  ON c.COURSE_ID=a.COURSE_ID
+		LEFT JOIN EDU_USER  AS  b  ON b.USER_ID=a.USER_ID
+	</sql>
+	
+	<sql id="publicWhere">
+	    <if test="  user!=null and   user.userId!=null and   user.userId>0">
+			and a.USER_ID =#{  user.userId}
+		</if>
+		
+		<if test="  course!=null and   course.courseName!=null and   course.courseName!=''">
+		    AND c.COURSE_NAME LIKE CONCAT('%',#{  course.courseName},'%')
+		</if>
+		
+		 <if test="  keyUser!=null and   keyUser!=''">
+			AND (b.MOBILE LIKE CONCAT('%',#{  keyUser},'%') OR
+				 b.EMAIL LIKE CONCAT('%',#{  keyUser},'%') OR
+				 b.USER_NAME LIKE CONCAT('%',#{  keyUser},'%') OR
+				 b.SHOW_NAME LIKE CONCAT('%',#{  keyUser},'%'))
+		 </if>
+	</sql>
+	
+	<!-- 分页查询 -->
+	<select id="queryListPage" parameterType="java.util.HashMap" resultMap="CourseBuyResult">
+		  SELECT 
+			<include refid="allcolumns"/>
+		  FROM 
+		    <include refid="table"/> as a
+		    <include refid="tables"/>
+		  where c.IS_AVALIABLE=1
+		    <include refid="publicWhere"/>
+		  ORDER BY  a.ADD_TIME desc
+		    <include refid="publicMapper.pageEnd" />
+	</select>
+	
+	<!-- 获取总数 -->
+	<select id="queryListPageCount" parameterType="java.util.HashMap" resultType="int">
+	      SELECT COUNT(1) FROM 
+	      <include refid="table"/>  as a
+	      <include refid="tables"/>
+	      where c.IS_AVALIABLE=1
+		    <include refid="publicWhere"/>
+		   
+	</select>
+	
+	<!-- 判断用户是否购买指定课程 -->
+	<select id="getUserCourseCount" parameterType="java.util.Map" resultType="int">
+		SELECT COUNT(1) FROM EDU_COURSE_BUY
+		<where>
+				AND EDU_COURSE_BUY.USER_ID=#{userId}
+				AND EDU_COURSE_BUY.COURSE_ID=#{courseId}
+		</where>
+	</select>
+	
+	<insert id="createUserBuy" parameterType="java.util.Map" >
+	INSERT INTO <include refid="table"/>(USER_ID,COURSE_ID)
+	VALUE(#{userId},#{courseId})
+	</insert>
+	
+</mapper>

@@ -1,0 +1,54 @@
+package com.ibf.live.service.website;
+
+
+import com.ibf.live.common.entity.PageEntity;
+import com.ibf.live.entity.website.WebsiteImages;
+
+import java.util.List;
+import java.util.Map;
+
+/**
+ *广告图service 接口
+ *@author www.inxedu.com
+ */
+public interface WebsiteImagesService {
+	/**
+	 * 添加图片
+	 * @param image
+	 * @return 返回图片ID
+	 */
+	public int creasteImage(WebsiteImages image);
+	
+	/**
+	 * 分页查询广告图片
+	 * @param image 查询条件
+	 * @param page 分页条件
+	 * @return List<WebsiteImages>
+	 */
+	public List<Map<String,Object>> queryImagePage(WebsiteImages image, PageEntity page);
+	
+	/**
+	 * 通过图片ID，查询图片详情信息
+	 * @param imageId
+	 * @return
+	 */
+	public WebsiteImages queryImageById(int imageId);
+	
+	/**
+	 * 删除图片
+	 * @param imageIds
+	 */
+	public void deleteImages(String imageIds);
+	
+	/**
+	 * 修改图片
+	 * @param image
+	 */
+	public void updateImage(WebsiteImages image);
+	
+	/**
+	 * 查询所有图片列表
+	 * @return Map<String,List<WebsiteImages>>
+	 */
+	public Map<String,List<WebsiteImages>> queryImagesByType();
+}

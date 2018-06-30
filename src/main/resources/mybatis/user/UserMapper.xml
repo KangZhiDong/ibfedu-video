@@ -1,0 +1,430 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ibf.live.dao.user.UserDao">
+    <resultMap type="User" id="UserResult">
+		<result property="userId" column="USER_ID" />
+		<result property="roleId" column="ROLE_ID" />
+		<result property="roleName" column="ROLE_NAME" />
+		<result property="userName" column="USER_NAME" />
+		<result property="mobile" column="MOBILE" />
+		<result property="email" column="EMAIL" />
+		<result property="password" column="PASSWORD" />
+		<result property="showName" column="SHOW_NAME" />
+		<result property="sex" column="SEX" />
+		<result property="age" column="AGE" />
+		<result property="picImg" column="PIC_IMG" />
+		<result property="birthday" column="BIRTHDAY" />
+		<result property="education" column="EDUCATION" />
+		<result property="career" column="CAREER" />
+		<result property="qq" column="QQ" />
+		<result property="qqOpenid" column="QQ_OPENID" />
+		<result property="weibo" column="WEIBO" />
+		<result property="weiboOpenid" column="WEIBO_OPENID" />
+		<result property="wechat" column="WECHAT" />
+		<result property="wechatOpenid" column="WECHAT_OPENID" />
+		<result property="bannerUrl" column="BANNER_URL" />
+		<result property="msgNum" column="MSG_NUM" />
+		<result property="sysMsgNum" column="SYS_MSG_NUM" />
+		<result property="createTime" column="CREATE_TIME" />
+		<result property="isavalible" column="IS_AVALIBLE" />
+		<result property="lastSystemTime" column="LAST_SYSTEM_TIME" />
+		<result property="vip" column="VIP" />
+		<result property="lastLoginTime" column="LAST_LOGIN_TIME" />
+		<result property="lastLoginIp" column="LAST_LOGIN_IP" />
+		<result property="isImport" column="IS_IMPORT" />
+        <result property="type" column="TYPE" />
+	</resultMap>
+
+	<sql id="edu_user_column">
+		EDU_USER.USER_ID,
+		EDU_USER.ROLE_ID,
+		EDU_USER.USER_NAME ,
+		EDU_USER.MOBILE,
+		EDU_USER.EMAIL,
+		EDU_USER.PASSWORD,
+		EDU_USER.SHOW_NAME,
+		EDU_USER.SEX,
+		EDU_USER.AGE,
+		EDU_USER.PIC_IMG,
+		EDU_USER.BIRTHDAY,
+		EDU_USER.education,
+		EDU_USER.career,
+		EDU_USER.QQ,
+		EDU_USER.QQ_OPENID,
+		EDU_USER.WEIBO,
+		EDU_USER.WEIBO_OPENID,
+		EDU_USER.WECHAT,
+		EDU_USER.WECHAT_OPENID,
+		EDU_USER.BANNER_URL,
+		EDU_USER.MSG_NUM,
+		EDU_USER.SYS_MSG_NUM,
+		EDU_USER.CREATE_TIME,
+		EDU_USER.IS_AVALIBLE,
+		EDU_USER.LAST_SYSTEM_TIME,
+		EDU_USER.VIP,
+		EDU_USER.LAST_LOGIN_TIME,
+		EDU_USER.LAST_LOGIN_IP,
+		EDU_USER.IS_IMPORT,
+		EDU_USER.TYPE,
+		EDU_USER.UUID
+	</sql>
+	<sql id="edu_user_property">
+		#{userId},
+		#{roleId},
+		#{userName},
+		#{mobile},
+		#{email},
+		#{password},
+		#{showName},
+		#{sex},
+		#{age},
+		#{picImg},
+		#{birthday},
+		#{education},
+		#{career},
+		#{qq},
+		#{qqOpenid},
+		#{weibo},
+		#{weiboOpenid},
+		#{wechat},
+		#{wechatOpenid},
+		#{bannerUrl},
+		#{msgNum},
+		#{sysMsgNum},
+		#{createTime},
+		#{isavalible},
+		#{loginTimeStamp},
+		#{vip},
+		#{lastLoginTime},
+		#{lastLoginIp},
+		#{isImport},
+		#{type},
+		#{uuid}
+	</sql>
+    <!-- 返回用户信息不带特殊信息:PassWord -->
+    <sql id="edu_user_column_other">
+        EDU_USER.USER_ID,
+		EDU_USER.ROLE_ID,
+		EDU_USER.USER_NAME ,
+		EDU_USER.MOBILE,
+		EDU_USER.EMAIL,
+		EDU_USER.SHOW_NAME,
+		EDU_USER.SEX,
+		EDU_USER.AGE,
+		EDU_USER.PIC_IMG,
+		EDU_USER.BIRTHDAY,
+		EDU_USER.education,
+		EDU_USER.career,
+		EDU_USER.QQ,
+		EDU_USER.QQ_OPENID,
+		EDU_USER.WEIBO,
+		EDU_USER.WEIBO_OPENID,
+		EDU_USER.WECHAT,
+		EDU_USER.WECHAT_OPENID,
+		EDU_USER.BANNER_URL,
+		EDU_USER.MSG_NUM,
+		EDU_USER.SYS_MSG_NUM,
+		EDU_USER.CREATE_TIME,
+		EDU_USER.IS_AVALIBLE,
+		EDU_USER.LAST_SYSTEM_TIME,
+		EDU_USER.VIP,
+		EDU_USER.LAST_LOGIN_TIME,
+		EDU_USER.LAST_LOGIN_IP,
+		EDU_USER.IS_IMPORT,
+		EDU_USER.TYPE
+    </sql>
+    <sql id="edu_user_where">
+       <if test="userId !=null and userId > 0 ">
+				AND EDU_USER.USER_ID = #{userId}
+	   </if>
+	   <if test="email !=null and email !='' ">
+				AND EDU_USER.EMAIL like CONCAT('%',#{email},'%')
+	   </if>
+	   <if test=" mobile !=null and  mobile !='' ">
+				AND EDU_USER.MOBILE like CONCAT('%',#{mobile},'%')
+	   </if>
+	   <if test=" userName !=null and  userName !='' ">
+				AND EDU_USER.USER_NAME like CONCAT('%',#{userName},'%')
+	   </if>
+	   <if test=" showName !=null and  showName !='' ">
+				AND EDU_USER.SHOW_NAME like CONCAT('%',#{showName},'%')
+	   </if>
+	   <if test=" sex !=null and  sex > 0 ">
+				AND EDU_USER.SEX=#{ sex}
+	   </if>
+	   <if test=" roleId!=null and  roleId!=''">
+               AND 	EDU_USER.ROLE_ID in (#{roleId})
+	   </if>
+	   <if test=" keyWord!=null and  keyWord!=''">
+				AND (EDU_USER.MOBILE LIKE CONCAT('%',#{ keyWord},'%') OR
+				EDU_USER.EMAIL LIKE CONCAT('%',#{ keyWord},'%') OR
+				EDU_USER.USER_NAME LIKE CONCAT('%',#{ keyWord},'%') OR
+				EDU_USER.SHOW_NAME LIKE CONCAT('%',#{ keyWord},'%'))
+		</if>
+	    <if test=" beginCreateTime!=null and  beginCreateTime!=''">
+				AND EDU_USER.CREATE_TIME >= #{ beginCreateTime}
+		</if>
+		<if test=" endCreateTime!=null and  endCreateTime!=''">
+				AND <![CDATA[EDU_USER.CREATE_TIME <= #{ endCreateTime}]]>
+		</if>
+		<if test=" isavalible>0">
+				AND EDU_USER.IS_AVALIBLE=#{ isavalible}
+		</if>
+		<if test=" type>0">
+				AND EDU_USER.TYPE=#{ type}
+		</if>
+    </sql>
+
+	<!-- 注册创建用户 -->
+	<insert id="createUser" parameterType="User" useGeneratedKeys="true" keyColumn="USER_ID" keyProperty="userId">
+		INSERT INTO EDU_USER(
+		<include refid="edu_user_column" />
+		)VALUE(
+		<include refid="edu_user_property" />
+		)
+	</insert>
+
+	<!-- 通过用户ID，查询用户信息 -->
+	<select id="queryUserById" parameterType="int" resultMap="UserResult">
+		SELECT
+		  <include refid="edu_user_column_other"/>,SYS_ROL ROLE_NAME
+		FROM EDU_USER LEFT JOIN  SYS_ROLE ON EDU_USER.ROLE_ID = SYS_ROL ROLE_ID WHERE EDU_USER.USER_ID=#{value}
+	</select>
+
+     	<!-- 查询用户名是否存在 -->
+	<select id="checkUserName" parameterType="java.lang.String"	resultType="int">
+		SELECT COUNT(1) FROM EDU_USER WHERE
+		EDU_USER.USER_NAME=#{value}
+	</select>
+
+	<!-- 查询手机是否存在 -->
+	<select id="checkMobile" parameterType="java.lang.String" resultType="int">
+		SELECT COUNT(1) FROM EDU_USER WHERE
+		EDU_USER.MOBILE=#{value}
+	</select>
+
+	<!-- 查询邮箱号是否存在 -->
+	<select id="checkEmail" parameterType="java.lang.String" resultType="int">
+		SELECT COUNT(1) FROM EDU_USER WHERE EDU_USER.EMAIL=#{value}
+	</select>
+
+	<!-- 查询uuid是否存在 -->
+	<select id="checkUuid" parameterType="java.lang.String" resultType="int">
+		SELECT COUNT(1) FROM EDU_USER WHERE EDU_USER.UUID=#{value}
+	</select>
+
+	<!-- 前端用户登录 (手机或邮箱均可登录) -->
+	<select id="getLoginUser" parameterType="java.util.Map" resultMap="UserResult">
+		SELECT
+		<include refid="edu_user_column_other" />,SYS_ROLE.ROLE_NAME
+		FROM EDU_USER LEFT JOIN  SYS_ROLE ON EDU_USER.ROLE_ID = SYS_ROLE.ROLE_ID
+		WHERE EDU_USER.PASSWORD=#{password}
+		   AND (EDU_USER.MOBILE=#{account} OR EDU_USER.EMAIL=#{account} OR EDU_USER.USER_NAME=#{account})
+		   AND EDU_USER.ROLE_ID IS NOT NULL
+		   AND <![CDATA[ EDU_USER.IS_AVALIBLE<>3]]>
+	</select>
+
+     <!-- 后端用户登录 (登录名或手机或邮箱均可登录) -->
+    <select id="queryLoginUser" parameterType="User" resultMap="UserResult">
+    	SELECT <include refid="edu_user_column_other"/>,SYS_ROLE.ROLE_NAME
+		FROM EDU_USER LEFT JOIN  SYS_ROLE ON EDU_USER.ROLE_ID = SYS_ROLE.ROLE_ID
+    	WHERE EDU_USER.PASSWORD=#{password}
+    	  AND (EDU_USER.MOBILE=#{userName} OR EDU_USER.EMAIL=#{userName} OR EDU_USER.USER_NAME=#{userName})
+    	  AND EDU_USER.ROLE_ID IS NOT NULL
+    	  AND <![CDATA[ EDU_USER.IS_AVALIBLE<>3]]>
+    	  AND <![CDATA[ EDU_USER.TYPE<>1]]>
+    </select>
+
+   <!-- 查询用户密码 -->
+    <select id="queryUserPassWordById" parameterType="int"  resultMap="UserResult">
+		SELECT EDU_USER.PASSWORD
+		  FROM EDU_USER
+		WHERE
+		  EDU_USER.USER_ID=#{userId}
+	</select>
+
+	<!-- 修改学员密码 -->
+	<update id="updateUserPwd" parameterType="User">
+		UPDATE EDU_USER SET
+		EDU_USER.PASSWORD=#{password}
+		WHERE EDU_USER.USER_ID=#{userId}
+	</update>
+
+	<!-- 分页查询用户列表，开始 -->
+	<select id="queryUserListPage" parameterType="java.util.Map" resultMap="UserResult">
+		SELECT
+		<include refid="edu_user_column_other" />,SYS_ROLE.ROLE_NAME
+		FROM EDU_USER LEFT JOIN  SYS_ROLE ON EDU_USER.ROLE_ID = SYS_ROLE.ROLE_ID
+		<where>
+		      <![CDATA[ EDU_USER.IS_AVALIBLE<>3]]>
+			  <include refid="edu_user_where"/>
+		</where>
+		 ORDER BY  EDU_USER.CREATE_TIME  DESC
+		<include refid="publicMapper.pageEnd" />
+	</select>
+
+	<select id="queryUserListPageCount" parameterType="java.util.Map" resultType="int">
+		SELECT COUNT(1) FROM EDU_USER
+		LEFT JOIN  SYS_ROLE ON EDU_USER.ROLE_ID = SYS_ROLE.ROLE_ID
+		<where>
+		    <![CDATA[ EDU_USER.IS_AVALIBLE<>3]]>
+			 <include refid="edu_user_where"/>
+		</where>
+	</select>
+	<!-- 分页查询用户列表，结束 -->
+
+    <!-- 查询用户列表 -->
+   	<select id="queryUserList" parameterType="java.util.Map" resultMap="UserResult">
+		SELECT
+		<include refid="edu_user_column_other" />,SYS_ROLE.ROLE_NAME
+		FROM EDU_USER LEFT JOIN  SYS_ROLE ON EDU_USER.ROLE_ID = SYS_ROLE.ROLE_ID
+		<where>
+		      <![CDATA[ EDU_USER.IS_AVALIBLE<>3]]>
+			  <include refid="edu_user_where"/>
+		</where>
+		 ORDER BY  EDU_USER.CREATE_TIME  DESC
+	</select>
+
+    <!-- 查询课程讲师 -->
+	<select id="queryCourseTeacerList" parameterType="int" resultType="java.util.Map">
+		SELECT
+			EDU_USER.USER_ID as id,
+			EDU_USER.SHOW_NAME as name,
+			EDU_USER.EDUCATION as education,
+			EDU_USER.PIC_IMG as picPath,
+			EDU_USER.CAREER as career
+		FROM EDU_USER
+		LEFT JOIN EDU_COURSE_USER ON EDU_COURSE_USER.USER_ID = EDU_USER.USER_ID
+		WHERE EDU_COURSE_USER.COURSE_ID=#{value}
+	</select>
+
+	<!-- 冻结或解冻用户 -->
+	<update id="updateUserStates" parameterType="User">
+		UPDATE EDU_USER SET
+		EDU_USER.IS_AVALIBLE=#{isavalible} WHERE
+		EDU_USER.USER_ID=#{userId}
+	</update>
+
+	<!-- 修改用户信息 -->
+	<update id="updateUser" parameterType="User">
+		UPDATE EDU_USER SET
+		EDU_USER.USER_NAME=#{userName},
+		EDU_USER.SHOW_NAME=#{showName},
+		EDU_USER.SEX=#{sex},
+		EDU_USER.AGE=#{age},
+		EDU_USER.QQ=#{qq},
+		EDU_USER.MOBILE=#{mobile},
+		EDU_USER.WECHAT=#{wechat},
+		EDU_USER.WEIBO=#{weibo},
+		EDU_USER.ROLE_ID=#{roleId},
+		EDU_USER.EMAIL=#{email},
+		EDU_USER.BIRTHDAY=#{birthday},
+		EDU_USER.EDUCATION=#{education},
+		EDU_USER.CAREER=#{career},
+		EDU_USER.PIC_IMG=#{picImg},
+		EDU_USER.TYPE=#{type}
+		WHERE
+		EDU_USER.USER_ID=#{userId}
+	</update>
+
+<!-- 通过UUID修改用户信息 -->
+	<update id="updateUserByUUID" parameterType="User">
+		UPDATE EDU_USER SET
+		EDU_USER.USER_NAME=#{userName},
+		EDU_USER.SHOW_NAME=#{showName},
+		EDU_USER.SEX=#{sex},
+		EDU_USER.AGE=#{age},
+		EDU_USER.QQ=#{qq},
+		EDU_USER.MOBILE=#{mobile},
+		EDU_USER.WECHAT=#{wechat},
+		EDU_USER.WEIBO=#{weibo},
+		EDU_USER.EMAIL=#{email},
+		EDU_USER.BIRTHDAY=#{birthday},
+		EDU_USER.PIC_IMG=#{picImg},
+		EDU_USER.TYPE=#{type}
+		WHERE
+		EDU_USER.UUID=#{uuid}
+	</update>
+
+	<!-- 修改用户头像 -->
+	<update id="updateImg" parameterType="User">
+		UPDATE EDU_USER SET
+		EDU_USER.PIC_IMG=#{picImg}
+		WHERE EDU_USER.USER_ID=#{userId}
+	</update>
+
+	<!-- 修改个中心个性化图片URL -->
+	<update id="updateUserBannerUrl" parameterType="User">
+		UPDATE EDU_USER
+		SET BANNER_URL=#{bannerUrl} WHERE USER_ID=#{userId}
+	</update>
+
+	<!-- 查询所有学员记录数 -->
+	<select id="queryAllUserCount" resultType="int">
+		SELECT COUNT(1) FROM  EDU_USER WHERE <![CDATA[ EDU_USER.IS_AVALIBLE<>3]]>
+	</select>
+
+	<!-- 通过手机号或邮箱号查询用户信息 -->
+	<select id="queryUserByEmailOrMobile" parameterType="java.lang.String"
+		resultMap="UserResult">
+		SELECT
+		<include refid="edu_user_column_other" />
+		FROM EDU_USER WHERE EMAIL=#{value} OR MOBILE=#{value} LIMIT 1
+	</select>
+
+	<!-- 根据多个用户id获取用户信息 -->
+	<select id="queryCustomerInCusIds" parameterType="java.util.HashMap"
+		resultMap="UserResult">
+		select
+		<include refid="edu_user_column_other" />
+		from EDU_USER
+		where EDU_USER.USER_ID in
+		<foreach collection="list" index="index" item="item" open="("
+			separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
+
+	<!-- 更新提醒的消息数量 +1 -->
+	<update id="updateUnReadMsgNumAddOne" parameterType="java.util.HashMap">
+		update EDU_USER set
+		<if test="falg=='msgNum'">
+			msg_num=msg_num+1
+		</if>
+		<if test="falg=='sysMsgNum'">
+			sys_msg_num=sys_msg_num+1
+		</if>
+		where
+		USER_ID=#{cusId}
+	</update>
+
+	<!-- 不区分消息类型 -->
+	<update id="updateUnReadMsgNumReset" parameterType="java.util.HashMap">
+		update
+		EDU_USER set
+		MSG_NUM=0,
+		SYS_MSG_NUM=0
+		where USER_ID=#{cusId}
+	</update>
+
+	<!-- 更新最后提醒消息的时间 -->
+	<update id="updateCusForLST" parameterType="java.util.HashMap">
+		update EDU_USER set
+		LAST_SYSTEM_TIME=#{date} where
+		USER_ID=#{cusId}
+	</update>
+
+	<!-- 更新用户最后登录的时间和IP -->
+	<update id="updateUserLoginLog" parameterType="java.util.Map">
+    	UPDATE EDU_USER SET EDU_USER.LAST_LOGIN_IP=#{ip} ,EDU_USER.LAST_LOGIN_TIME=#{time}
+    	WHERE EDU_USER.USER_ID=#{userId}
+    </update>
+
+    <!-- 通过用户uuid，查询用户信息 -->
+	<select id="getLoginUserByUuid" parameterType="java.lang.String" resultMap="UserResult">
+		SELECT
+		  <include refid="edu_user_column_other"/>,SYS_ROLE.ROLE_NAME
+		FROM EDU_USER LEFT JOIN  SYS_ROLE ON EDU_USER.ROLE_ID = SYS_ROLE.ROLE_ID WHERE EDU_USER.UUID=#{value}
+	</select>
+</mapper>

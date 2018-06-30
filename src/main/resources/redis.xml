@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+
+
+    <bean id="propertyConfigurer"
+          class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath:/application.properties</value>
+            </list>
+        </property>
+    </bean>
+    <!-- redis数据库配置-->
+    <bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+        <property  name="maxIdle" value="${redis.maxIdle}" />
+        <property  name="maxTotal" value="${redis.maxTotal}" />
+        <property  name="testOnBorrow" value="${redis.testOnBorrow}" />
+    </bean>
+
+    <bean id="redisPool" class="com.ibf.live.common.redis.RedisPool"  init-method="init">
+        <property name="config" ref="jedisPoolConfig" />
+        <property name="serverIp" value="${redis.servers}" />
+        <property name="port" value="${redis.port}" />
+    </bean>
+
+    <bean id="redisManager" class="com.ibf.live.common.redis.RedisManage">
+        <property name="redisPool" ref="redisPool" />
+    </bean>
+</beans>

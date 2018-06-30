@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ibf.live.dao.statistics.StatisticsDayDao">
+
+        <resultMap id="StatisticsDayResult" type="StatisticsDay">
+            <result property="id" column="ID"/>
+            <result property="statisticsTime" column="STATISTICS_TIME"/>
+            <result property="loginNum" column="LOGIN_NUM"/>
+            <result property="createTime" column="CREATE_TIME"/>
+            <result property="registeredNum" column="REGISTERED_NUM"/>
+			<result property="videoViewingNum" column="VIDEO_VIEWING_NUM"/>
+			<result property="dailyUserNumber" column="DAILY_USER_NUMBER"/>
+			<result property="dailyCourseNumber" column="DAILY_COURSE_NUMBER"/>
+        </resultMap>
+
+        <sql id="edu_statistics_day_columns">
+            EDU_STATISTICS_DAY.ID,
+            EDU_STATISTICS_DAY.STATISTICS_TIME,
+            EDU_STATISTICS_DAY.LOGIN_NUM,
+            EDU_STATISTICS_DAY.CREATE_TIME,
+            EDU_STATISTICS_DAY.REGISTERED_NUM,
+            EDU_STATISTICS_DAY.VIDEO_VIEWING_NUM,
+            EDU_STATISTICS_DAY.DAILY_USER_NUMBER,
+            EDU_STATISTICS_DAY.DAILY_COURSE_NUMBER
+        </sql>
+		 <sql id="edu_statistics_day_columns_notnull">
+            IFNULL(EDU_STATISTICS_DAY.ID,0) as id,
+            IFNULL(EDU_STATISTICS_DAY.STATISTICS_TIME,'') as statistics_time,
+            IFNULL(EDU_STATISTICS_DAY.LOGIN_NUM,0) as login_num,
+            IFNULL(EDU_STATISTICS_DAY.CREATE_TIME,'') as create_time,
+            IFNULL(EDU_STATISTICS_DAY.REGISTERED_NUM,0) as registered_num,
+            IFNULL(EDU_STATISTICS_DAY.VIDEO_VIEWING_NUM,0) as video_viewing_num,
+            IFNULL(EDU_STATISTICS_DAY.DAILY_USER_NUMBER,0) as daily_user_number,
+            IFNULL(EDU_STATISTICS_DAY.DAILY_COURSE_NUMBER,0) as daily_course_number
+        </sql>
+        <sql id="edu_statistics_day_columns_sum">
+        	IFNULL(sum(EDU_STATISTICS_DAY.id),0) as id,
+            '' as statistics_time,
+            IFNULL(sum(EDU_STATISTICS_DAY.login_num),0) as login_num,
+            '' as create_time,
+            IFNULL(sum(EDU_STATISTICS_DAY.registered_num),0) as registered_num,
+            IFNULL(sum(EDU_STATISTICS_DAY.video_viewing_num),0) as video_viewing_num,
+            IFNULL(sum(EDU_STATISTICS_DAY.daily_user_number),0) as daily_user_number,
+            IFNULL(sum(EDU_STATISTICS_DAY.daily_course_number),0) as daily_course_number
+        </sql>
+        <sql id="edu_statistics_day_properties">
+            #{id},
+            #{statisticsTime},
+            #{loginNum},
+            #{createTime}
+        </sql>
+
+        <!-- 活跃人数 -->
+		<sql id="edu_statistics_loginNum">
+			select IfNULL(count(DISTINCT ul.user_id),0) from EDU_USER_LOGIN_LOG as ul WHERE DATE_FORMAT(ul.login_time,'%Y-%m-%d')=DATE_FORMAT(#{value},'%Y-%m-%d')
+		</sql>
+		
+		<!-- 注册人数 -->
+		<sql id="edu_statistics_registeredNum">
+			select IfNULL(count(DISTINCT ur.USER_ID),0) from EDU_USER as ur WHERE DATE_FORMAT(ur.CREATE_TIME,'%Y-%m-%d')=DATE_FORMAT(#{value},'%Y-%m-%d')
+		</sql>
+		
+		<!-- 添加网站统计web（天） -->
+        <insert id="createStatisticsDay" parameterType="Date"  >
+            insert INTO EDU_STATISTICS_DAY (<include refid="edu_statistics_day_columns"/>) VALUES (0,DATE_FORMAT(#{value},'%Y-%m-%d'),
+			(<include refid="edu_statistics_loginNum"/>),
+			now(),(<include refid="edu_statistics_registeredNum"/>),
+			(select IfNULL(count(1),0) from EDU_COURSE_STUDYHISTORY where date_format(EDU_COURSE_STUDYHISTORY.UPDATE_TIME,'%Y-%m-%d')=date_format(#{value},'%Y-%m-%d')),
+			(select IfNULL(count(1),0) from EDU_USER where EDU_USER.IS_AVALIBLE=1),
+			(select IfNULL(count(1),0) from EDU_COURSE where EDU_COURSE.IS_AVALIABLE=1))
+        </insert>
+        
+        <!-- 按年查询网站统计 -->
+        <select id="getStatisticsByYear" resultMap="StatisticsDayResult" parameterType="Map">
+            select
+			year.m,
+			<include refid="edu_statistics_day_columns_notnull"/>
+			FROM
+			(SELECT 12 as m UNION ALL
+			SELECT 11 UNION ALL
+			SELECT 10 UNION ALL
+			SELECT 09 UNION ALL
+			SELECT 08 UNION ALL
+			SELECT 07 UNION ALL
+			SELECT 06 UNION ALL
+			SELECT 05 UNION ALL
+			SELECT 04 UNION ALL
+			SELECT 03 UNION ALL
+			SELECT 02 UNION ALL
+			SELECT 01) as year
+			LEFT JOIN
+			(
+				SELECT
+				DATE_FORMAT(EDU_STATISTICS_DAY.statistics_time, '%m') as m,
+	            <include refid="edu_statistics_day_columns_sum"/>
+	            from EDU_STATISTICS_DAY
+	            WHERE DATE_FORMAT(EDU_STATISTICS_DAY.statistics_time, '%Y')=#{nowYear}
+	            GROUP BY m
+	        ) AS EDU_STATISTICS_DAY
+			on year.m = EDU_STATISTICS_DAY.m
+        </select>
+        <!-- 按月查询网站统计 -->
+        <select id="getStatisticsByMonth" resultMap="StatisticsDayResult" parameterType="Map">
+	        SELECT
+			DATE_FORMAT(day.d, '%d') as d,
+			 <include refid="edu_statistics_day_columns_notnull"/>
+			FROM
+			(SELECT
+			(#{nowMonth} - INTERVAL DAY(#{nowMonth}) DAY) + INTERVAL s DAY as d
+			FROM
+			(SELECT 31 AS s UNION ALL
+				SELECT 30 UNION ALL
+				SELECT 29 UNION ALL
+				SELECT 28 UNION ALL
+				SELECT 27 UNION ALL
+				SELECT 26 UNION ALL
+				SELECT 25 UNION ALL
+				SELECT 24 UNION ALL
+				SELECT 23 UNION ALL
+				SELECT 22 UNION ALL
+				SELECT 21 UNION ALL
+				SELECT 20 UNION ALL
+				SELECT 19 UNION ALL
+				SELECT 18 UNION ALL
+				SELECT 17 UNION ALL
+				SELECT 16 UNION ALL
+				SELECT 15 UNION ALL
+				SELECT 14 UNION ALL
+				SELECT 13 UNION ALL
+				SELECT 12 UNION ALL
+				SELECT 11 UNION ALL
+				SELECT 10 UNION ALL
+				SELECT 09 UNION ALL
+				SELECT 08 UNION ALL
+				SELECT 07 UNION ALL
+				SELECT 06 UNION ALL
+				SELECT 05 UNION ALL
+				SELECT 04 UNION ALL
+				SELECT 03 UNION ALL
+				SELECT 02 UNION ALL
+				SELECT 01 
+			) m
+			WHERE <![CDATA[s<=day(LAST_DAY(#{nowMonth})]]>)) 
+			AS day
+			LEFT JOIN
+			(
+				SELECT
+				DATE_FORMAT(EDU_STATISTICS_DAY.statistics_time, '%Y-%m-%d') AS d,
+	            <include refid="edu_statistics_day_columns"/>
+	            from EDU_STATISTICS_DAY
+	            WHERE DATE_FORMAT(EDU_STATISTICS_DAY.statistics_time, '%Y-%m')=#{nowYear}
+			) AS EDU_STATISTICS_DAY
+			ON day.d = EDU_STATISTICS_DAY.d
+		</select>
+		
+		<!-- 查询网站总统计,不分时间 -->
+        <select id="getStatisticsSumMsg" resultMap="StatisticsDayResult">
+	        select 
+	 			<include refid="edu_statistics_day_columns_sum"/>
+			from EDU_STATISTICS_DAY
+		</select>
+		<!-- 动态查询最近的活跃度 -->
+		<select id="getStatisticThirty" resultMap="StatisticsDayResult" parameterType="int">
+			select 
+	 			<include refid="edu_statistics_day_columns"/>
+			from EDU_STATISTICS_DAY
+			order by EDU_STATISTICS_DAY.statistics_time DESC
+			limit 0,#{value }
+		</select>
+		<!-- 查询时间段的统计集合 -->
+		 <select id="getStatisticsByDate" resultMap="StatisticsDayResult" parameterType="map">
+	 		select 
+ 			<include refid="edu_statistics_day_columns"/>
+			from EDU_STATISTICS_DAY
+			<where>
+				<if test="startTime!=null and startTime!=''">
+					and <![CDATA[EDU_STATISTICS_DAY.statistics_time>=#{startTime}]]>
+				</if>
+				<if test="endTime!=null and endTime!=''">
+					and <![CDATA[EDU_STATISTICS_DAY.statistics_time<=#{endTime}]]>
+				</if>
+			</where>
+		 </select>
+		 <!-- 日起段删除统计 -->
+		 <delete id="delStatisticsByDate" parameterType="map">
+		 	delete from EDU_STATISTICS_DAY 
+		 	<where>
+				<if test="startTime!=null and startTime!=''">
+					and <![CDATA[EDU_STATISTICS_DAY.statistics_time>=#{startTime}]]>
+				</if>
+				<if test="endTime!=null and endTime!=''">
+					and <![CDATA[EDU_STATISTICS_DAY.statistics_time<=#{endTime}]]>
+				</if>
+			</where>
+		 </delete>
+		 <!-- 删除指定天统计 -->
+		 <delete id="delStatisticsDay" parameterType="Date">
+		 	delete from EDU_STATISTICS_DAY 
+		 	WHERE DATE_FORMAT(EDU_STATISTICS_DAY.statistics_time,'%Y-%m-%d')=DATE_FORMAT(#{value},'%Y-%m-%d')
+		 </delete>
+	<!-- 今天的登录人数-->
+	<select id="statistics_loginNumToday" parameterType="date" resultType="int">
+		<include refid="edu_statistics_loginNum"></include>
+	</select>
+	<!-- 今天的注册人数-->
+	<select id="statistics_registeredNumToday" parameterType="date" resultType="int">
+		<include refid="edu_statistics_registeredNum"></include>
+	</select>
+
+	<!-- 查询网站统计数据 -->
+	<select id="getStatisticsDayList" parameterType="hashMap" resultMap="StatisticsDayResult">
+		select <include refid="edu_statistics_day_columns"/>
+		from EDU_STATISTICS_DAY
+		<where>
+			<if test="startDate !='' and startDate !=null and endDate !=null and endDate !='' ">
+				and EDU_STATISTICS_DAY.STATISTICS_TIME BETWEEN #{startDate} and #{endDate}
+			</if>
+		</where>
+	</select>
+
+	<!-- 网校总用户数 -->
+	<select id="getEudUserCount" resultType="int">
+		select count(1) from EDU_USER where EDU_USER.IS_AVALIBLE=1
+	</select>
+
+	<!-- 网校课程数 -->
+	<select id="getEudCouresCount" resultType="int">
+		select count(1) from EDU_COURSE where EDU_COURSE.IS_AVALIABLE=1
+	</select>
+</mapper>

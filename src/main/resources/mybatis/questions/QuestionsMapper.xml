@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ibf.live.dao.questions.QuestionsDao">
+
+	<resultMap id="QuestionsResult" type="Questions">
+		<result property="id" column="ID" />
+		<result property="cusId" column="CUS_ID" />
+		<result property="title" column="TITLE" />
+		<result property="content" column="CONTENT" />
+		<result property="type" column="TYPE" />
+		<result property="status" column="STATUS" />
+		<result property="replyCount" column="REPLY_COUNT" />
+		<result property="browseCount" column="BROWSE_COUNT" />
+		<result property="praiseCount" column="PRAISE_COUNT" />
+		<result property="addTime" column="ADD_TIME" />
+		
+		<result property="showName" column="showName" />
+		<result property="email" column="email" />
+		<result property="picImg" column="picImg" />
+	</resultMap>
+	
+	<!-- 表全部的属性 -->
+	<sql id="edu_questions_columns">
+		EDU_QUESTIONS.ID,
+		EDU_QUESTIONS.CUS_ID,
+		EDU_QUESTIONS.TITLE,
+		EDU_QUESTIONS.CONTENT,
+		EDU_QUESTIONS.TYPE,
+		EDU_QUESTIONS.STATUS,
+		EDU_QUESTIONS.REPLY_COUNT,
+		EDU_QUESTIONS.BROWSE_COUNT,
+		EDU_QUESTIONS.PRAISE_COUNT,
+		EDU_QUESTIONS.ADD_TIME
+	</sql>
+
+	<sql id="edu_questions_properties">
+		#{id},
+		#{cusId},
+		#{title},
+		#{content},
+		#{type},
+		#{status},
+		#{replyCount},
+		#{browseCount},
+		#{praiseCount},
+		#{addTime}
+	</sql>
+
+	<!-- 添加问答 -->
+	<insert id="createQuestions" parameterType="Questions"
+		useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+		insert INTO EDU_QUESTIONS (
+		<include refid="edu_questions_columns" />
+		) VALUES (
+		<include refid="edu_questions_properties" />
+		)
+	</insert>
+
+	<!-- 删除问答 -->
+	<delete id="deleteQuestionsById" parameterType="long">
+		delete from
+		EDU_QUESTIONS
+		where
+		id = #{value}
+	</delete>
+	
+	<!-- 更新问答 -->
+	<update id="updateQuestions" parameterType="Questions">
+		update
+		EDU_QUESTIONS
+		SET
+		ID = #{id},
+		TITLE= #{title},
+		CUS_ID = #{cusId},
+		CONTENT = #{content},
+		TYPE = #{type},
+		STATUS = #{status},
+		REPLY_COUNT = #{replyCount},
+		BROWSE_COUNT= #{browseCount},
+		PRAISE_COUNT= #{praiseCount},
+		ADD_TIME = #{addTime}
+		where
+		id =#{id}
+	</update>
+	
+	<!-- 通过id查询问答 -->
+	<select id="getQuestionsById" resultMap="QuestionsResult"
+		parameterType="long">
+		select
+		<include refid="edu_questions_columns" />
+		,EDU_USER.SHOW_NAME as showName,EDU_USER.EMAIL as email ,EDU_USER.PIC_IMG as picImg
+		FROM EDU_QUESTIONS
+		left join EDU_USER on EDU_USER.USER_ID=EDU_QUESTIONS.CUS_ID
+		where
+		id = #{value}
+	</select>
+
+	<!-- 查询问答列表 -->
+	<select id="getQuestionsList" resultMap="QuestionsResult" parameterType="java.util.HashMap">
+		select
+		distinct(EDU_QUESTIONS.id),
+		<include refid="edu_questions_columns" />
+		,EDU_USER.SHOW_NAME as showName,EDU_USER.EMAIL as email ,EDU_USER.PIC_IMG as picImg
+		from EDU_QUESTIONS
+		left join EDU_USER on EDU_USER.USER_ID=EDU_QUESTIONS.CUS_ID
+		left join `EDU_QUESTIONS_TAG_RELATION` on `EDU_QUESTIONS_TAG_RELATION`.QUESTIONS_ID = EDU_QUESTIONS.ID
+		left join `EDU_QUESTIONS_COMMENT` on `EDU_QUESTIONS_COMMENT`.QUESTION_ID = EDU_QUESTIONS.ID
+		<where>
+			<if test="  id!=null and   id!=0">
+				and EDU_QUESTIONS.ID = #{  id}
+			</if>
+			<if test="  title!=null and   title!=''">
+				and <![CDATA[ EDU_QUESTIONS.TITLE like CONCAT('%',#{  title},'%') ]]>
+			</if>
+			<if test="  type != 0">
+				and EDU_QUESTIONS.TYPE = #{  type}
+			</if>
+			<if test="  orderFalg=='status0'">
+				and EDU_QUESTIONS.STATUS =#{  status}
+			</if>
+			<if test="  questionsTagId!=null and   questionsTagId!=0">
+				and EDU_QUESTIONS_TAG_RELATION.QUESTIONS_TAG_ID=#{  questionsTagId}
+			</if>
+			<if test="  beginCreateTime!=null and   beginCreateTime!='' ">
+                 AND <![CDATA[EDU_QUESTIONS.ADD_TIME>#{  beginCreateTime} ]]>
+             </if>
+             <if test="  endCreateTime!=null and   endCreateTime!='' ">
+                 AND <![CDATA[EDU_QUESTIONS.ADD_TIME<#{  endCreateTime} ]]>
+             </if>
+             <if test="  cusId!=null and   cusId!=0"><!-- 我的提问  -->
+				and EDU_QUESTIONS.CUS_ID = #{  cusId}
+			</if>
+			<!-- <if test="  commentUserId !=null and   commentUserId !=0">我的回答
+				and EDU_QUESTIONS.CUS_ID != #{  commentUserId} and EDU_QUESTIONS_COMMENT.CUS_ID=#{  commentUserId}
+			</if> -->
+			<if test="  commentUserId !=null and   commentUserId !=0"><!-- 我的回答  -->
+				  EDU_QUESTIONS_COMMENT.CUS_ID=#{  commentUserId}
+			</if>
+		</where>
+		<if test="  orderFalg=='addTime'">
+			order by EDU_QUESTIONS.ADD_TIME desc
+		</if>
+		<if test="  orderFalg=='replycount'">
+			order by EDU_QUESTIONS.REPLY_COUNT desc
+		</if>
+		<include refid="publicMapper.pageEnd" />
+	</select>
+
+	<select id="getQuestionsListCount" resultType="int"
+		parameterType="java.util.HashMap">
+		SELECT
+		COUNT(distinct(EDU_QUESTIONS.id))
+		from EDU_QUESTIONS
+		left join `EDU_QUESTIONS_TAG_RELATION` on `EDU_QUESTIONS_TAG_RELATION`.QUESTIONS_ID = EDU_QUESTIONS.ID
+		left join `EDU_QUESTIONS_COMMENT` on `EDU_QUESTIONS_COMMENT`.QUESTION_ID = EDU_QUESTIONS.ID
+		<where>
+			<if test="  id!=null and   id!=0">
+				and EDU_QUESTIONS.ID = #{  id}
+			</if>
+			<if test="  title!=null and   title!='' ">
+				and <![CDATA[ EDU_QUESTIONS.TITLE like CONCAT('%',#{  title},'%') ]]>
+			</if>
+			<if test="  type != 0">
+				and EDU_QUESTIONS.TYPE = #{  type}
+			</if>
+			<if test="  orderFalg=='status0'">
+				and EDU_QUESTIONS.status =#{  status}
+			</if>
+			<if test="  questionsTagId!=null and   questionsTagId!=0">
+				and EDU_QUESTIONS_TAG_RELATION.QUESTIONS_TAG_ID=#{  questionsTagId}
+			</if>
+			<if test="  beginCreateTime!=null and   beginCreateTime!='' ">
+                 AND <![CDATA[EDU_QUESTIONS.ADD_TIME>#{  beginCreateTime} ]]>
+             </if>
+             <if test="  endCreateTime!=null and   endCreateTime!='' ">
+                 AND <![CDATA[EDU_QUESTIONS.ADD_TIME<#{  endCreateTime} ]]>
+             </if>
+             <if test="  cusId!=null and   cusId!=0"><!-- 我的提问  -->
+				and EDU_QUESTIONS.CUS_ID = #{  cusId}
+			</if>
+			<!-- <if test="  commentUserId !=null and   commentUserId !=0">我的回答
+				and EDU_QUESTIONS.CUS_ID != #{  commentUserId} and EDU_QUESTIONS_COMMENT.CUS_ID=#{  commentUserId}
+			</if> -->
+			<if test="  commentUserId !=null and   commentUserId !=0"><!-- 我的回答  -->
+				 EDU_QUESTIONS_COMMENT.CUS_ID=#{  commentUserId}
+			</if>
+		</where>
+	</select>
+	
+	<select id="queryQuestionsOrder" parameterType="java.util.HashMap"
+		resultMap="QuestionsResult">
+		select
+		<include refid="edu_questions_columns" />
+		from EDU_QUESTIONS
+		order by EDU_QUESTIONS.REPLY_COUNT DESC,EDU_QUESTIONS.PRAISE_COUNT DESC,EDU_QUESTIONS.BROWSE_COUNT DESC
+		limit #{size}
+	</select>
+	
+	<select id="queryAllQuestionsCount" resultType="int">
+		select count(1) from EDU_QUESTIONS
+	</select>
+</mapper>

@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ibf.live.dao.mobile.UserMobileMsgDao">
+	<resultMap id="UserMobileMsgResult" type="UserMobileMsg">
+            <result property="id" column="id"/>
+            <result property="mobile" column="mobile"/>
+            <result property="userId" column="user_id"/>
+            <result property="content" column="content"/>
+            <result property="createTime" column="create_time"/>
+            <result property="sendTime" column="send_time"/>
+            <result property="status" column="status"/>
+            <result property="type" column="type"/>
+            <result property="loginName" column="login_name"/>
+        </resultMap>
+	<sql id="edu_mobilesend_history_columns">
+		EDU_MOBILESEND_HISTORY.id,
+		EDU_MOBILESEND_HISTORY.mobile,
+		EDU_MOBILESEND_HISTORY.user_id,
+		EDU_MOBILESEND_HISTORY.content,
+		EDU_MOBILESEND_HISTORY.create_time,
+		EDU_MOBILESEND_HISTORY.send_time,
+		EDU_MOBILESEND_HISTORY.status,
+		EDU_MOBILESEND_HISTORY.type
+	</sql>
+	<sql id="edu_mobilesend_history_properties">
+		#{id},
+		#{mobile},
+		#{userId},
+		#{content},
+		#{createTime},
+		#{sendTime},
+		#{status},
+		#{type}
+	</sql>
+	
+	<!-- 短信记录列表 -->
+	<select id="queryUserMobileMsgList" parameterType="java.util.HashMap" resultMap="UserMobileMsgResult">
+	select 
+		<include refid="edu_mobilesend_history_columns"/>,
+		EDU_USER.USER_NAME
+	from EDU_MOBILESEND_HISTORY
+	left join EDU_USER on EDU_MOBILESEND_HISTORY.user_id =EDU_USER.user_id
+	<where>
+		<if test="  mobile !=null and   mobile !='' ">
+				EDU_MOBILESEND_HISTORY.mobile like CONCAT('%',#{  mobile},'%')
+		</if>
+		<if test="  startDate !='' and   startDate !=null and   endDate !=null and   endDate !='' ">
+			and EDU_MOBILESEND_HISTORY.create_time BETWEEN #{  startDate} and #{  endDate}
+		</if>
+		<if test="  type !='' and   type !=null and   type !=0">
+			and	EDU_MOBILESEND_HISTORY.type =#{  type}
+		</if>
+		<if test="  status !=0 and   status !=null and   status !=0">
+			and	EDU_MOBILESEND_HISTORY.status =#{  status}
+		</if>
+	</where>
+	order by EDU_MOBILESEND_HISTORY.id desc
+	<include refid="publicMapper.pageEnd" />
+	</select>
+	<select id="queryUserMobileMsgListCount" parameterType="java.util.HashMap" resultType="int">
+	select count(1)
+	from EDU_MOBILESEND_HISTORY
+	<where>
+		<if test="  mobile !=null and   mobile !='' ">
+				EDU_MOBILESEND_HISTORY.mobile like CONCAT('%',#{  mobile},'%')
+		</if>
+		<if test="  startDate !='' and   startDate !=null and   endDate !=null and   endDate !='' ">
+			and EDU_MOBILESEND_HISTORY.create_time BETWEEN #{  startDate} and #{  endDate}
+		</if>
+		<if test="  type !='' and   type !=null and   type !=0">
+			and	EDU_MOBILESEND_HISTORY.type =#{  type}
+		</if>
+		<if test="  status !=0 and   status !=null and   status !=0">
+			and	EDU_MOBILESEND_HISTORY.status =#{  status}
+		</if>
+	</where>
+	</select>
+	
+	<!-- 查询单个短信记录 -->
+	<select id="queryUserMobileMsgById" parameterType="java.lang.Long" resultMap="UserMobileMsgResult">
+		SELECT <include refid="edu_mobilesend_history_columns"/>,
+		EDU_USER.USER_NAME
+		FROM EDU_MOBILESEND_HISTORY
+		LEFT JOIN EDU_USER ON EDU_MOBILESEND_HISTORY.USER_ID =EDU_USER.USER_ID
+		WHERE EDU_MOBILESEND_HISTORY.ID=#{id}
+	</select>
+	
+	<!-- 删除短信记录 -->
+	<delete id="delUserMobileMsg" parameterType="java.lang.Long">
+		DELETE FROM EDU_MOBILESEND_HISTORY
+		WHERE EDU_MOBILESEND_HISTORY.ID=#{id}
+	</delete>
+	
+	<!-- 修改短信记录 -->
+	<update id="updateUserMobileMsg" parameterType="java.util.HashMap">
+		UPDATE EDU_MOBILESEND_HISTORY 
+			SET EDU_MOBILESEND_HISTORY.CONTENT=#{content},
+			EDU_MOBILESEND_HISTORY.SEND_TIME=#{sendTime}
+		WHERE 
+		  	EDU_MOBILESEND_HISTORY.ID=#{id}
+		  	AND EDU_MOBILESEND_HISTORY.STATUS=2
+			AND EDU_MOBILESEND_HISTORY.TYPE=2
+	</update>
+	
+	<!-- 添加短信记录 -->
+	<insert id="addUserMobileMsg" parameterType="java.util.List">
+	INSERT INTO EDU_MOBILESEND_HISTORY
+	 (<include refid="edu_mobilesend_history_columns"/>
+	 )VALUES
+	    <foreach collection="list" item="item"  separator=",">
+	    (#{item.id},
+		#{item.mobile},
+		#{item.userId},
+		#{item.content},
+		#{item.createTime},
+		#{item.sendTime},
+		#{item.status},
+		#{item.type}
+		)
+	    </foreach>
+	</insert>
+	
+	<!-- 查询当前时间的  短信-->
+	<select id="queryNowMobileMsgList" parameterType="Date" resultMap="UserMobileMsgResult">
+	SELECT 
+		<include refid="edu_mobilesend_history_columns"/>
+	from EDU_MOBILESEND_HISTORY
+	where
+        <![CDATA[ EDU_MOBILESEND_HISTORY.SEND_TIME <= #{nowDate} ]]>
+
+		and EDU_MOBILESEND_HISTORY.STATUS=2
+		and EDU_MOBILESEND_HISTORY.TYPE=2
+	</select>
+	
+	<!-- 修改发送状态 -->
+	<update id="updateMsgStatus" parameterType="java.lang.Long">
+		update EDU_MOBILESEND_HISTORY 
+			set EDU_MOBILESEND_HISTORY.status=1
+		where 
+		  	EDU_MOBILESEND_HISTORY.id=#{id}
+	</update>
+	
+</mapper>

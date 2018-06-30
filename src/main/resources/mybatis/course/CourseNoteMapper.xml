@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ibf.live.dao.course.CourseNoteDao">
+
+        <resultMap id="CourseNoteResult" type="CourseNote">
+            <result property="id" column="ID"/>
+             <result property="courseId" column="COURSE_ID"/>
+            <result property="kpointId" column="KPOINT_ID"/>
+            <result property="userId" column="USER_ID"/>
+            <result property="content" column="CONTENT"/>
+            <result property="updateTime" column="UPDATE_TIME"/>
+            <result property="status" column="STATUS"/>
+        </resultMap>
+		
+		<resultMap type="QueryCourseNote" id="QueryCourseNoteResult" extends="CourseNoteResult">
+			<result property="nickname" column="nickname"/>
+			<result property="email" column="email"/>
+			<result property="pointName" column="pointName"/>
+		</resultMap>
+		
+		<resultMap type="QueryCourseNote" id="QueryUserCourseNoteResult" extends="CourseNoteResult">
+			<result property="pointName" column="pointName"/>
+			<result property="courseName" column="courseName"/>
+		</resultMap>
+		
+        <sql id="edu_course_note_columns">
+            EDU_COURSE_NOTE.id,
+            EDU_COURSE_NOTE.COURSE_ID,
+            EDU_COURSE_NOTE.KPOINT_ID,
+            EDU_COURSE_NOTE.USER_ID,
+            EDU_COURSE_NOTE.CONTENT,
+            EDU_COURSE_NOTE.UPDATE_TIME,
+            EDU_COURSE_NOTE.STATUS
+        </sql>
+
+        <sql id="edu_course_note_properties">
+            #{id},
+            #{courseId},
+            #{kpointId},
+            #{userId},
+            #{content},
+            #{updateTime},
+            #{status}
+        </sql>
+
+        <insert id="createCourseNote" parameterType="CourseNote" keyColumn="id" keyProperty="id" useGeneratedKeys="true" >
+            INSERT INTO EDU_COURSE_NOTE (<include refid="edu_course_note_columns"/>) VALUES (<include refid="edu_course_note_properties"/>)
+        </insert>
+
+        <delete id="deleteCourseNoteById" parameterType="Long">
+            DELETE FROM EDU_COURSE_NOTE
+            WHERE
+                ID = #{value}
+        </delete>
+
+        <update id="updateCourseNote" parameterType="CourseNote">
+            UPDATE EDU_COURSE_NOTE SET
+            	COURSE_ID = #{courseId},
+                KPOINT_ID = #{kpointId},
+                USER_ID = #{userId},
+                CONTENT = #{content},
+                UPDATE_TIME = #{updateTime}
+            where
+                KPOINT_ID = #{kpointId}
+                and USER_ID = #{userId}
+        </update>
+
+        <select id="getCourseNoteById" resultMap="CourseNoteResult" parameterType="Long">
+            SELECT
+            <include refid="edu_course_note_columns"/>
+            FROM EDU_COURSE_NOTE
+            WHERE
+                ID = #{value}
+        </select>
+		
+        <select id="getCourseNoteList" resultMap="CourseNoteResult" parameterType="CourseNote">
+            SELECT
+            <include refid="edu_course_note_columns"/>
+            FROM EDU_COURSE_NOTE
+        </select>
+        
+         <select id="getCourseNoteByKpointIdAndUserId" resultMap="CourseNoteResult" parameterType="Map">
+            SELECT
+            <include refid="edu_course_note_columns"/>
+            FROM EDU_COURSE_NOTE
+            <where>
+            KPOINT_ID = #{kpointId} and
+            USER_ID = #{userId} and
+            STATUS=0
+            </where>
+        </select>
+        
+        <!-- 查询课程笔记列表 后台 -->
+        <select id="getCourseNoteListPage" parameterType="Map" resultMap="QueryCourseNoteResult">
+	        SELECT <include refid="edu_course_note_columns"/>,
+	        USER_USER.NICKNAME,
+	        USER_USER.EMAIL,
+	        EDU_COURSE_KPOINT.NAME pointName,
+            EDU_COURSE.NAME courseName
+	        FROM EDU_COURSE_NOTE
+	        LEFT JOIN USER_USER ON EDU_COURSE_NOTE.USER_ID = USER_USER.ID
+	        LEFT JOIN EDU_COURSE_KPOINT ON EDU_COURSE_NOTE.KPOINT_ID=EDU_COURSE_KPOINT.ID AND EDU_COURSE_KPOINT.STATUS=0
+            LEFT JOIN EDU_COURSE ON EDU_COURSE_NOTE.COURSE_ID= EDU_COURSE.ID
+	        <where>
+	        <if test="  pointName != null and   pointName!=''">
+	        EDU_COURSE_KPOINT.NAME LIKE CONCAT('%',#{  pointName},'%')
+	        </if>
+	        <if test="  keyword !=null and   keyword!=''">
+	        AND (USER_USER.NICKNAME LIKE CONCAT('%',#{  keyword},'%') OR USER_USER.EMAIL LIKE CONCAT('%',#{  keyword},'%'))
+	        </if>
+	        <if test="  startDate!=null and   startDate!='' ">
+       			AND<![CDATA[ EDU_COURSE_NOTE.UPDATE_TIME >=]]>CONCAT(#{  startDate},'00:00:00')
+       		</if>
+       		<if test="  endDate!=null and   endDate!='' ">
+       			AND<![CDATA[ EDU_COURSE_NOTE.UPDATE_TIME <=]]>CONCAT(#{  endDate},'23:59:59')
+       		</if>
+	        </where>
+	        ORDER BY EDU_COURSE_NOTE.ID DESC
+	        <include refid="publicMapper.pageEnd" />
+        </select>
+        
+        <select id="getCourseNoteListPageCount" parameterType="Map" resultType="int">
+        	SELECT COUNT(1) FROM EDU_COURSE_NOTE
+        	LEFT JOIN USER_USER ON EDU_COURSE_NOTE.USER_ID = USER_USER.ID
+	        LEFT JOIN EDU_COURSE_KPOINT ON EDU_COURSE_NOTE.KPOINT_ID=EDU_COURSE_KPOINT.ID AND EDU_COURSE_KPOINT.STATUS=0 
+        	 <where>
+	        <if test="  pointName != null and   pointName!=''">
+	        EDU_COURSE_KPOINT.NAME LIKE CONCAT('%',#{  pointName},'%')
+	        </if>
+	        <if test="  keyword !=null and   keyword!=''">
+	        AND (USER_USER.NICKNAME LIKE CONCAT('%',#{  keyword},'%') OR USER_USER.EMAIL LIKE CONCAT('%',#{  keyword},'%'))
+	        </if>
+	        <if test="  startDate!=null and   startDate!='' ">
+       			AND<![CDATA[ EDU_COURSE_NOTE.UPDATE_TIME >=]]>CONCAT(#{  startDate},'00:00:00')
+       		</if>
+       		<if test="  endDate!=null and   endDate!='' ">
+       			AND<![CDATA[ EDU_COURSE_NOTE.UPDATE_TIME <=]]>CONCAT(#{  endDate},'23:59:59')
+       		</if>
+	        </where>
+        </select>
+        
+        <!-- 更新显示隐藏状态 -->
+        <update id="updateCourseNoteListStatus" parameterType="CourseNote">
+	        UPDATE EDU_COURSE_NOTE 
+	        SET EDU_COURSE_NOTE.STATUS=#{status}
+	        WHERE EDU_COURSE_NOTE.ID=#{id}
+        </update>
+        
+        <select id="getQueryCourseNoteById" parameterType="Long" resultMap="QueryCourseNoteResult">
+         SELECT <include refid="edu_course_note_columns"/>,
+	        USER_USER.NICKNAME,
+	        USER_USER.EMAIL,
+	        EDU_COURSE_KPOINT.NAME pointName
+	        FROM EDU_COURSE_NOTE
+	        LEFT JOIN USER_USER ON EDU_COURSE_NOTE.USER_ID = USER_USER.ID
+	        LEFT JOIN EDU_COURSE_KPOINT ON EDU_COURSE_NOTE.KPOINT_ID=EDU_COURSE_KPOINT.ID AND EDU_COURSE_KPOINT.STATUS=0
+	        WHERE  EDU_COURSE_NOTE.id=#{id}
+        </select>
+        
+        <select id="getUserCourseNoteByUserId" parameterType="Map" resultMap="QueryUserCourseNoteResult">
+	        SELECT <include refid="edu_course_note_columns"/>,
+	        EDU_COURSE_KPOINT.NAME pointName,
+	        EDU_COURSE.NAME courseName
+	        FROM EDU_COURSE_NOTE
+	        LEFT JOIN EDU_COURSE_KPOINT ON EDU_COURSE_NOTE.KPOINT_ID=EDU_COURSE_KPOINT.ID AND EDU_COURSE_KPOINT.STATUS=0
+	        LEFT JOIN EDU_COURSE ON EDU_COURSE_NOTE.COURSE_ID=EDU_COURSE.ID
+	        WHERE EDU_COURSE_NOTE.USER_ID=#{e} AND EDU_COURSE_NOTE.STATUS=0
+        	ORDER BY EDU_COURSE_NOTE.ID DESC
+        	<include refid="publicMapper.pageEnd" />
+        </select>
+        <select id="getUserCourseNoteByUserIdCount" parameterType="Map" resultType="int">
+	        SELECT COUNT(1)
+	        FROM EDU_COURSE_NOTE
+	        WHERE EDU_COURSE_NOTE.USER_ID=#{e} AND EDU_COURSE_NOTE.STATUS=0
+        </select>
+        
+</mapper>

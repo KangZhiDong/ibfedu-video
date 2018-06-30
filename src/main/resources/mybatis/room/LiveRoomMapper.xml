@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ibf.live.dao.room.LiveRoomDao">
+	<resultMap id="LiveRoomResult" type="LiveRoom">
+		<result property="id" column="ID" />
+		<result property="roomName" column="ROOMNAME" />
+		<result property="streamUrl" column="STREAM_URL"/>
+		<result property="liveUrl" column="LIVE_URL"/>
+		<result property="speedLiveUrl" column="SPEED_LIVE_URL"/>
+		<result property="title" column="TITLE"/>
+		<result property="comment" column="COMMENT"/>
+		<result property="arrangeTime" column="ARRANGETIME"/>
+		<result property="notice" column="NOTICE"/>
+		<result property="isIndex" column="ISINDEX"/>
+		<result property="broadcasting" column="BROADCASTING"/>
+		<result property="userId" column="USERID"/>
+		<result property="courseId" column="COURSEID"/>
+	</resultMap>
+	
+	<resultMap id="LiveRoomCoResult" type="LiveRoomCo" extends="LiveRoomResult">
+		<result property="userName" column="SHOW_NAME"/>
+		<result property="courseName" column="COURSE_NAME"/>
+		<result property="logo" column="LOGO"/>
+	</resultMap>
+	
+	<resultMap id="LiveRoomPwdResult" type="LiveRoom">
+		<result property="streamUrl" column="STREAM_URL"/>
+		<result property="liveUrl" column="LIVE_URL"/>
+		<result property="password" column="PASSWORD"/>
+	</resultMap>
+	
+	<sql id="live_room_column">
+	EDU_LIVE_ROOM.ID,
+	EDU_LIVE_ROOM.ROOMNAME,
+	EDU_LIVE_ROOM.STREAM_URL,
+	EDU_LIVE_ROOM.LIVE_URL,
+	EDU_LIVE_ROOM.SPEED_LIVE_URL,
+	EDU_LIVE_ROOM.TITLE,
+	EDU_LIVE_ROOM.COMMENT,
+	EDU_LIVE_ROOM.ARRANGETIME,
+	EDU_LIVE_ROOM.NOTICE,
+	EDU_LIVE_ROOM.ISINDEX,
+	EDU_LIVE_ROOM.BROADCASTING,
+	EDU_LIVE_ROOM.USERID,
+	EDU_LIVE_ROOM.COURSEID
+	</sql>
+	
+	<sql id="live_room_properties">
+	#{id},
+	#{roomName},
+	#{streamUrl},
+	#{liveUrl},
+	#{speedLiveUrl},
+	#{title},
+	#{comment},
+	#{arrangeTime},
+	#{notice},
+	#{isIndex},
+	#{broadcasting},
+	#{userId},
+	#{courseId}
+	</sql>
+	<!-- 相关课程  -->
+	<select id="getRoomById" parameterType="int"  resultMap="LiveRoomResult">
+		SELECT <include refid="live_room_column"/>
+		FROM EDU_LIVE_ROOM WHERE
+		EDU_LIVE_ROOM.ID = #{value}
+	</select>
+	
+	<!-- 相关课程  -->
+	<select id="getRoomByName" parameterType="String"  resultMap="LiveRoomCoResult">
+		SELECT <include refid="live_room_column"/>, EDU_USER.SHOW_NAME
+		FROM EDU_LIVE_ROOM 
+		LEFT JOIN EDU_USER ON EDU_USER.USER_ID=EDU_LIVE_ROOM.USERID
+		WHERE EDU_LIVE_ROOM.ROOMNAME = #{value}
+	</select>
+
+<!-- 分页查询房间列表，开始,后台专用 -->
+	<select id="queryRoomListPage" parameterType="java.util.Map" resultMap="LiveRoomCoResult">
+	SELECT <include refid="live_room_column"/>, EDU_USER.SHOW_NAME,EDU_COURSE.COURSE_NAME,EDU_COURSE.LOGO 
+	FROM EDU_LIVE_ROOM 
+	LEFT JOIN EDU_USER ON EDU_USER.USER_ID=EDU_LIVE_ROOM.USERID
+	LEFT JOIN EDU_COURSE ON EDU_LIVE_ROOM.COURSEID=EDU_COURSE.COURSE_ID
+	<where>
+		<if test="  userId>0">
+		EDU_LIVE_ROOM.USERID =#{  userId}
+		</if>
+		<if test="  courseId>0">
+		AND EDU_LIVE_ROOM.COURSEID =#{  courseId}
+		</if>
+		<if test="  broadcasting>0">
+		AND EDU_LIVE_ROOM.BROADCASTING  =#{  broadcasting}
+		</if>
+		<if test="  isIndex>0">
+		AND EDU_LIVE_ROOM.ISINDEX  =#{  isIndex}
+		</if>
+	</where>
+	 ORDER BY ID DESC
+	<include refid="publicMapper.pageEnd"/>
+	</select>
+	<select id="queryRoomListPageCount" parameterType="java.util.Map" resultType="int">
+	SELECT COUNT(1) FROM EDU_LIVE_ROOM 
+	<where>
+		<if test="  userId>0">
+		EDU_LIVE_ROOM.USERID =#{  userId}
+		</if>
+		<if test="  courseId>0">
+		AND EDU_LIVE_ROOM.COURSEID =#{  courseId}
+		</if>
+		<if test="  broadcasting>0">
+		AND EDU_LIVE_ROOM.BROADCASTING  =#{  broadcasting}
+		</if>
+		<if test="  isIndex>0">
+		AND EDU_LIVE_ROOM.ISINDEX  =#{  isIndex}
+		</if>
+	</where>
+	</select>
+	<!-- 分页查询课程，结束,后台专用-->
+	
+	<!-- 查询房间列表-->
+	<select id="getRoomList" parameterType="QueryCourse" resultMap="LiveRoomCoResult">
+		SELECT <include refid="live_room_column"/>, EDU_USER.SHOW_NAME,EDU_COURSE.COURSE_NAME,EDU_COURSE.LOGO
+		FROM EDU_LIVE_ROOM 
+		LEFT JOIN EDU_USER ON EDU_USER.USER_ID=EDU_LIVE_ROOM.USERID
+		LEFT JOIN EDU_COURSE ON EDU_LIVE_ROOM.COURSEID=EDU_COURSE.COURSE_ID
+		<where>
+			<if test="userId>0">
+			EDU_LIVE_ROOM.USERID =#{userId}
+			</if>
+			<if test="courseId>0">
+			AND EDU_LIVE_ROOM.COURSEID =#{courseId}
+			</if>
+			<if test="broadcasting>0">
+			AND EDU_LIVE_ROOM.BROADCASTING  =#{broadcasting}
+			</if>
+			<if test="isIndex>0">
+			AND EDU_LIVE_ROOM.ISINDEX  =#{isIndex}
+			</if>
+		</where>
+		<if test="count>0">
+		LIMIT #{count}
+		</if>
+	</select>
+	
+	<!-- 删除房间 -->
+	<delete id="deleteRoomById" parameterType="int">
+		DELETE FROM EDU_LIVE_ROOM  WHERE EDU_LIVE_ROOM.ID = #{value}
+	</delete>
+	<!-- 创建房间 -->
+	<insert id="addRoom" parameterType="LiveRoom" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+	INSERT INTO EDU_LIVE_ROOM(<include refid="live_room_column"/>)
+	VALUE(<include refid="live_room_properties"/>)
+	</insert>
+	
+	<!-- 更新房间 -->
+	<update id="updateRoom" parameterType="LiveRoom">
+		UPDATE EDU_LIVE_ROOM SET 
+		EDU_LIVE_ROOM.ROOMNAME=#{roomName},
+		EDU_LIVE_ROOM.STREAM_URL=#{streamUrl},
+		EDU_LIVE_ROOM.LIVE_URL=#{liveUrl},
+		EDU_LIVE_ROOM.SPEED_LIVE_URL=#{speedLiveUrl},
+		EDU_LIVE_ROOM.TITLE=#{title},
+		EDU_LIVE_ROOM.COMMENT=#{comment},
+		EDU_LIVE_ROOM.ARRANGETIME=#{arrangeTime},
+		EDU_LIVE_ROOM.NOTICE=#{notice},
+		EDU_LIVE_ROOM.ISINDEX=#{isIndex},
+		EDU_LIVE_ROOM.BROADCASTING=#{broadcasting},
+		EDU_LIVE_ROOM.USERID=#{userId},
+		EDU_LIVE_ROOM.COURSEID=#{courseId}
+		WHERE EDU_LIVE_ROOM.ID=#{id}
+	</update>
+</mapper>
